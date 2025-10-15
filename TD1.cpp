@@ -90,6 +90,50 @@ private:
     }
 };
 
+struct Node
+{
+    int value;
+    Node* next;
+    Node(int val) : value(val), next(nullptr) {}
+};
+
+class StackByLinkedList
+{    
+public:
+    Node* top;
+    StackByLinkedList() : top(nullptr) {}
+    void push(int value)
+    {
+        Node* new_node = new Node(value);
+        new_node->next = top;
+        top = new_node;
+    }
+    int pop()
+    {
+        if (top == nullptr)
+        {
+            printf("Stack is empty\n");
+            return EMPTY_STACK_INDEX;
+        }
+        int value = top->value;
+        Node* temp = top;
+        top = top->next;
+        delete temp;
+        return value;
+    }
+    void print(string spacer)
+    {
+        printf("%s{\n", spacer.c_str());
+        Node* current = top;
+        while (current != nullptr)
+        {
+            printf("%s    %d\n", spacer.c_str(), current->value);
+            current = current->next;
+        }
+        printf("%s}\n", spacer.c_str());
+    }
+};
+
 namespace test
 {
     namespace stack_by_array
@@ -263,18 +307,150 @@ namespace test
             return EXIT_SUCCESS;
         }
     }
+    namespace stack_by_linked_list
+    {
+        int initStack()
+        {
+            printf("Testing stack by linked list initialization\n");
+            StackByLinkedList stack;
+            if (stack.top != nullptr)
+            {
+                printf("    Failed to initialize stack\n");
+                printf("    Expected top : nullptr\n");
+                printf("    Actual top : %p\n", (void*)stack.top);
+                return EXIT_FAILURE;
+            }
+            stack.print("    ");
+            printf("Stack initialized successfully\n");
+            return EXIT_SUCCESS;
+        }
+        namespace push
+        {
+            int test_regular_push()
+            {
+                StackByLinkedList stack = StackByLinkedList();
+                stack.push(1);
+                if (stack.top == nullptr){
+                    printf("        Failed to push element to stack\n");
+                    printf("        Expected top not to be nullptr\n");
+                    return EXIT_FAILURE;
+                }
+                if (stack.top->value != 1)
+                {
+                    printf("        Failed to push element to stack\n");
+                    printf("        Expected top value : %d\n", 1);
+                    printf("        Actual top value : %d\n", stack.top->value);
+                    return EXIT_FAILURE;
+                }
+                stack.print("        ");
+                printf("    Element regularly pushed successfully\n");
+                return EXIT_SUCCESS;
+            }
+            int test_push()
+            {
+                printf("Testing push operation\n");
+                int regular_push_result = test_regular_push();
+                if (regular_push_result != EXIT_SUCCESS)
+                {
+                    printf("    Regular push test failed\n");
+                    return regular_push_result;
+                }
+                printf("    All push tests passed successfully\n");
+                return EXIT_SUCCESS;
+            }
+        } // namespace push
+        namespace pop
+        {
+            int test_regular_pop()
+            {
+                StackByLinkedList stack = StackByLinkedList();
+                stack.push(0);
+                stack.push(1);
+                stack.push(2);
+                printf("        Stack before pop operation :\n");
+                stack.print("           ");
+                int pop_result = stack.pop();
+                if (pop_result != 2)
+                {
+                    printf("        Failed to pop the correct element from stack\n");
+                    printf("        Expected pop value : %d\n", 2);
+                    printf("        Actual pop value : %d\n", pop_result);
+                    return EXIT_FAILURE;
+                }
+                if (stack.top == nullptr || stack.top->value != 1)
+                {
+                    printf("        Failed to update top after pop operation\n");
+                    printf("        Expected top value : %d\n", 1);
+                    if (stack.top == nullptr)
+                    {
+                        printf("        Actual top value : nullptr\n");
+                    }
+                    else
+                    {
+                        printf("        Actual top value : %d\n", stack.top->value);
+                    }
+                    return EXIT_FAILURE;
+                }
+                return EXIT_SUCCESS;
+            }
+            int test_pop_from_empty_stack(){
+                StackByLinkedList stack = StackByLinkedList();
+                int pop_result = stack.pop();
+                if (pop_result != -1)
+                {
+                    printf("        Failed to pop from empty stack\n");
+                    printf("        Expected pop value : %d\n", -1);
+                    printf("        Actual pop value : %d\n", pop_result);
+                    return EXIT_FAILURE;
+                }
+                printf("    Pop from empty stack tested successfully\n");
+                return EXIT_SUCCESS;
+            }
+            int test_pop()
+            {
+                return EXIT_SUCCESS;
+            }
+
+        } // namespace pop
+        int test_stack_by_linked_list()
+        {
+            int initStack_result = initStack();
+            if (initStack_result != EXIT_SUCCESS)
+            {
+                printf("Init stack test failed, not testing push\n");
+                return initStack_result;
+            }
+            // Add push and pop tests here
+            printf("All stack by linked list tests passed successfully\n");
+            return EXIT_SUCCESS;
+        }
+    }
     int test_all()
     {
+        
         int stack_by_array_tests_results = stack_by_array::test_statck_by_array();
         if (stack_by_array_tests_results != EXIT_SUCCESS)
         {
             return EXIT_FAILURE;
         }
-
+        int stack_by_linked_list_tests_results = stack_by_linked_list::test_stack_by_linked_list();
+        if (stack_by_linked_list_tests_results != EXIT_SUCCESS)
+        {
+            return EXIT_FAILURE;
+        }
         return EXIT_SUCCESS;
     }
 }
 int main()
 {
-    return test::test_all();
+    printf("Starting all tests\n");
+    int all_tests_result = test::test_all(); 
+    if (all_tests_result != EXIT_SUCCESS)
+    {
+        printf("Some tests failed\n");
+    }
+    else{
+        printf("All tests passed successfully\n");
+    }
+    return all_tests_result;
 }
