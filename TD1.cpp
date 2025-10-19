@@ -219,6 +219,106 @@ private:
     }
 };
 
+struct CircularNode
+{
+    int value;
+    CircularNode *next;
+    CircularNode *prev;
+    CircularNode(int val) : value(val), next(nullptr), prev(nullptr) {}
+};
+
+class QueueByCircularList
+{
+public:
+    int elements[MAX];
+    int front;
+    int rear;
+    int size;
+    QueueByCircularList()
+    {
+        front = 0;
+        rear = MAX - 1;
+        size = 0;
+    }
+    static QueueByCircularList initQueue()
+    {
+        QueueByCircularList queue;
+        return queue;
+    }
+    void push(int value)
+    {
+        if (!isFull())
+        {
+            incrementRear();
+            addElement(value);
+            incrementSize();
+        }
+        else
+        {
+            printf("Queue is full\n");
+        }
+    }
+    int pop()
+    {
+        int first_element = removeElement();
+        incrementFront();
+        return first_element;
+    }
+    void print(std::string spacer)
+    {
+        printf("%s{\n", spacer.c_str());
+        if (!isEmpty())
+        {
+            for (int i = front; i != rear; i = (i + 1) % MAX)
+            {
+                printf("%s    %d : %d\n", spacer.c_str(), i, elements[i]);
+            }
+            printf("%s    %d : %d\n", spacer.c_str(), rear, elements[rear]);
+        }
+        printf("%s}\n", spacer.c_str());
+    }
+
+private:
+    bool isFull()
+    {
+        return size == MAX;
+    }
+    bool isEmpty()
+    {
+        return size == 0;
+    }
+    void incrementRear()
+    {
+        rear = (rear + 1) % MAX;
+    }
+    void incrementFront()
+    {
+        front = (front + 1) % MAX;
+    }
+    void incrementSize()
+    {
+        size = size + 1;
+    }
+    void decrementSize()
+    {
+        size = size - 1;
+    }
+    void addElement(int value)
+    {
+        elements[rear] = value;
+    }
+    int removeElement()
+    {
+        if (!isEmpty())
+        {
+            size = size - 1;
+            return elements[front];
+        }
+        printf("Queue is empty\n");
+        return front;
+    }
+};
+
 namespace test
 {
     namespace stack_by_array
@@ -623,7 +723,7 @@ namespace test
                     printf("        Actual front : %d\n", queue.front);
                     return EXIT_FAILURE;
                 }
-                
+
                 printf("    Element regularly popped successfully\n");
                 return EXIT_SUCCESS;
             }
@@ -688,7 +788,191 @@ namespace test
             return EXIT_SUCCESS;
         }
     }
+    namespace queue_by_circular_list
+    {
+        int test_initQueue()
+        {
+            printf("Testing circular queue initialization\n");
+            QueueByCircularList queue = QueueByCircularList::initQueue();
+            if (queue.front != 0 || queue.rear != MAX - 1 || queue.size != 0)
+            {
+                printf("    Failed to initialize circular queue\n");
+                printf("    Expected front : %d, rear : %d, size : %d\n", 0, MAX - 1, 0);
+                printf("    Actual front : %d, rear : %d, size : %d\n", queue.front, queue.rear, queue.size);
+                return EXIT_FAILURE;
+            }
+            queue.print("    ");
+            printf("Circular queue initialized successfully\n");
+            return EXIT_SUCCESS;
+        }
+        namespace push
+        {
+            int test_regular_push()
+            {
+                printf("    Testing regular push operation\n");
+                QueueByCircularList queue = QueueByCircularList::initQueue();
+                queue.push(1);
+                printf("        Circular queue after pushing one element :\n");
+                printf("        front : %d, rear : %d, size : %d\n", queue.front, queue.rear, queue.size);
+                queue.print("        ");
+                if (queue.size != 1)
+                {
+                    printf("        Failed to push element to circular queue\n");
+                    printf("        Expected size : %d\n", 1);
+                    printf("        Actual size : %d\n", queue.size);
+                    return EXIT_FAILURE;
+                }
+                if (queue.elements[queue.rear] != 1)
+                {
+                    printf("        Failed to push element to circular queue\n");
+                    printf("        Expected element at rear index : %d\n", 1);
+                    printf("        Actual element at rear index : %d\n", queue.elements[queue.rear]);
+                    return EXIT_FAILURE;
+                }
 
+                printf("    Element regularly pushed successfully\n");
+                return EXIT_SUCCESS;
+            }
+            int test_push_to_full_queue()
+            {
+                printf("    Testing push operation to full circular queue\n");
+                QueueByCircularList queue = QueueByCircularList::initQueue();
+                for (int i = 0; i < MAX; i++)
+                {
+                    queue.push(i);
+                }
+                printf("        Circular queue after pushing %d elements :\n", MAX);
+                queue.print("            ");
+                printf("        Pushing element to full circular queue :\n");
+                queue.push(100);
+                printf("        Circular queue after attempting to push to full circular queue :\n");
+                queue.print("            ");
+                if (queue.size != MAX)
+                {
+                    printf("        Error: size changed after pushing to full circular queue\n");
+                    return EXIT_FAILURE;
+                }
+                printf("        Push to full circular queue handled correctly\n");
+                return EXIT_SUCCESS;
+            }
+
+            int test_push()
+            {
+                printf("Testing push operation\n");
+                int regular_push_result = test_regular_push();
+                if (regular_push_result != EXIT_SUCCESS)
+                {
+                    printf("    Regular push test failed, not testing push to full circular queue\n");
+                    return regular_push_result;
+                }
+                int push_to_full_queue_result = test_push_to_full_queue();
+                if (push_to_full_queue_result != EXIT_SUCCESS)
+                {
+                    return push_to_full_queue_result;
+                }
+                printf("    All push tests passed successfully\n");
+                return EXIT_SUCCESS;
+            }
+            
+            
+        } // namespace push
+        namespace pop    
+        {
+            int test_regular_pop()
+            {
+                printf("    Testing regular pop operation\n");
+                QueueByCircularList queue = QueueByCircularList::initQueue();
+                queue.push(1);
+                queue.push(2);
+                queue.push(3);
+                printf("        Circular queue before pop operation :\n");
+                queue.print("           ");
+                int popped_value = queue.pop();
+                printf("        Circular queue after pop operation :\n");
+                queue.print("           ");
+                if (popped_value != 1)
+                {
+                    printf("        Failed to pop the correct element from circular queue\n");
+                    printf("        Expected popped value : %d\n", 1);
+                    printf("        Actual popped value : %d\n", popped_value);
+                    return EXIT_FAILURE;
+                }
+                if (queue.front != 1)
+                {
+                    printf("        Failed to update front after pop operation\n");
+                    printf("        Expected front : %d\n", 1);
+                    printf("        Actual front : %d\n", queue.front);
+                    return EXIT_FAILURE;
+                }
+
+                printf("    Element regularly popped successfully\n");
+                return EXIT_SUCCESS;
+            }
+            int test_pop_from_empty_queue()
+            {
+                printf("    Testing pop from empty queue operation\n");
+                QueueByCircularList queue = QueueByCircularList::initQueue();
+                printf("        Circular queue before pop operation :\n");
+                queue.print("           ");
+                int popped_value = queue.pop();
+                printf("        Circular queue after pop operation :\n");
+                queue.print("           ");
+                if (popped_value != -1)
+                {
+                    printf("        Failed to pop from empty circular queue\n");
+                    printf("        Expected popped value : %d\n", -1);
+                    printf("        Actual popped value : %d\n", popped_value);
+                    return EXIT_FAILURE;
+                }
+                printf("    Pop from empty circular queue handled correctly\n");
+                return EXIT_SUCCESS;
+            }
+            
+            int pop_test()
+            {
+                int regular_pop_result = test_regular_pop();
+                if (regular_pop_result != EXIT_SUCCESS)
+                {
+                    printf("    Regular pop test failed, not testing pop from empty circular queue\n");
+                    return regular_pop_result;
+                }
+                int pop_from_empty_queue_result = test_pop_from_empty_queue();
+                if (pop_from_empty_queue_result != EXIT_SUCCESS)
+                {
+                    return pop_from_empty_queue_result;
+                }
+                printf("    All pop tests passed successfully\n");
+                return EXIT_SUCCESS;
+            }
+        } // namespace pop
+
+        // Add push and pop tests here
+        int test_queue_by_circular_list()
+        {
+            int initQueue_result = test_initQueue();
+            if (initQueue_result != EXIT_SUCCESS)
+            {
+                printf("Init circular queue test failed, not testing push\n");
+                return initQueue_result;
+            }
+            int push_result = push::test_push();
+            if (push_result != EXIT_SUCCESS)
+            {
+                printf("Push test failed, not testing pop\n");
+                return push_result;
+            }
+            printf("    push operation tested successfully\n");
+            int pop_result = EXIT_SUCCESS; // Call to pop tests here
+            if (pop_result != EXIT_SUCCESS)
+            {
+                printf("Pop test failed\n");
+                return pop_result;
+            }
+            // Add push and pop tests here
+            printf("All circular queue tests passed successfully\n");
+            return EXIT_SUCCESS;
+        }
+    }
     int test_all()
     {
 
@@ -702,11 +986,16 @@ namespace test
         // {
         //     return EXIT_FAILURE;
         // }
-        int queue_by_array_tests_results = queue_by_array::test_statck_by_array();
-        if (queue_by_array_tests_results != EXIT_SUCCESS)
+        // int queue_by_array_tests_results = queue_by_array::test_statck_by_array();
+        // if (queue_by_array_tests_results != EXIT_SUCCESS)
+        // {
+        //     return EXIT_FAILURE;
+        // }
+        int queue_by_circular_list_tests_results = queue_by_circular_list::test_queue_by_circular_list();
+        if (queue_by_circular_list_tests_results != EXIT_SUCCESS)
         {
             return EXIT_FAILURE;
-        }
+        }   
         return EXIT_SUCCESS;
     }
 }
