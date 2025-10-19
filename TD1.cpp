@@ -89,21 +89,21 @@ private:
     }
 };
 
-struct Node
+struct StackNode
 {
     int value;
-    Node *next;
-    Node(int val) : value(val), next(nullptr) {}
+    StackNode *next;
+    StackNode(int val) : value(val), next(nullptr) {}
 };
 
 class StackByLinkedList
 {
 public:
-    Node *top;
+    StackNode *top;
     StackByLinkedList() : top(nullptr) {}
     void push(int value)
     {
-        Node *new_node = new Node(value);
+        StackNode *new_node = new StackNode(value);
         new_node->next = top;
         top = new_node;
     }
@@ -115,7 +115,7 @@ public:
             return EMPTY_STACK_INDEX;
         }
         int value = top->value;
-        Node *temp = top;
+        StackNode *temp = top;
         top = top->next;
         delete temp;
         return value;
@@ -123,7 +123,7 @@ public:
     void print(std::string spacer)
     {
         printf("%s{\n", spacer.c_str());
-        Node *current = top;
+        StackNode *current = top;
         while (current != nullptr)
         {
             printf("%s    %d\n", spacer.c_str(), current->value);
@@ -219,12 +219,12 @@ private:
     }
 };
 
-struct CircularNode
+struct CircularQueueNode
 {
     int value;
-    CircularNode *next;
-    CircularNode *prev;
-    CircularNode(int val) : value(val), next(nullptr), prev(nullptr) {}
+    CircularQueueNode *next;
+    CircularQueueNode *prev;
+    CircularQueueNode(int val) : value(val), next(nullptr), prev(nullptr) {}
 };
 
 class QueueByCircularList
@@ -316,6 +316,63 @@ private:
         }
         printf("Queue is empty\n");
         return front;
+    }
+};
+
+struct QueueNode
+{
+    int value;
+    QueueNode *next;
+    QueueNode(int val) : value(val), next(nullptr) {}
+};
+
+class QueueByLinkedList
+{
+private:
+    QueueNode *front;
+    QueueNode *rear;
+public:
+    QueueByLinkedList() : front(nullptr), rear(nullptr) {}
+    void push(int value)
+    {
+        QueueNode *new_node = new QueueNode(value);
+        if (rear)
+        {
+            rear->next = new_node;
+        }
+        rear = new_node;
+        if (!front)
+        {
+            front = new_node;
+        }
+    }
+    int pop()
+    {
+        if (!front)
+        {
+            printf("Queue is empty\n");
+            return -1;
+        }
+        int value = front->value;
+        QueueNode *temp = front;
+        front = front->next;
+        delete temp;
+        if (!front)
+        {
+            rear = nullptr;
+        }
+        return value;
+    }
+    void print(std::string spacer)
+    {
+        printf("%s{\n", spacer.c_str());
+        QueueNode *current = front;
+        while (current)
+        {
+            printf("%s    %d\n", spacer.c_str(), current->value);
+            current = current->next;
+        }
+        printf("%s}\n", spacer.c_str());
     }
 };
 
@@ -973,6 +1030,158 @@ namespace test
             return EXIT_SUCCESS;
         }
     }
+    namespace queue_by_linked_list
+    { 
+        int test_initQueue()
+        {
+            printf("Testing queue by linked list initialization\n");
+            QueueByLinkedList queue;
+            int dequeued = queue.pop();
+            if (dequeued != -1)
+            {
+                printf("    Failed to initialize queue\n");
+                printf("    Expected pop from empty queue : %d\n", -1);
+                printf("    Actual pop value : %d\n", dequeued);
+                return EXIT_FAILURE;
+            }
+            queue.print("    ");
+            printf("Queue initialized successfully\n");
+            return EXIT_SUCCESS;
+        }
+
+        namespace push
+        {
+            int test_regular_push()
+            {
+                printf("    Testing regular push operation\n");
+                QueueByLinkedList queue;
+                queue.push(1);
+                queue.print("        ");
+                int value = queue.pop();
+                if (value != 1)
+                {
+                    printf("        Failed to push element to queue\n");
+                    printf("        Expected dequeued value : %d\n", 1);
+                    printf("        Actual dequeued value : %d\n", value);
+                    return EXIT_FAILURE;
+                }
+                printf("    Element regularly enqueued successfully\n");
+                return EXIT_SUCCESS;
+            }
+
+            int test_push()
+            {
+                printf("Testing push operation\n");
+                int regular_push_result = test_regular_push();
+                if (regular_push_result != EXIT_SUCCESS)
+                {
+                    printf("    Regular push test failed\n");
+                    return regular_push_result;
+                }
+                printf("    All push tests passed successfully\n");
+                return EXIT_SUCCESS;
+            }
+        }
+
+        namespace pop
+        {
+            int test_regular_pop()
+            {
+                printf("    Testing regular pop operation\n");
+                QueueByLinkedList queue;
+                queue.push(1);
+                queue.push(2);
+                queue.push(3);
+                printf("        Queue before pop operation :\n");
+                queue.print("           ");
+                int popped_value = queue.pop();
+                printf("        Queue after pop operation :\n");
+                queue.print("           ");
+                if (popped_value != 1)
+                {
+                    printf("        Failed to pop the correct element from queue\n");
+                    printf("        Expected popped value : %d\n", 1);
+                    printf("        Actual popped value : %d\n", popped_value);
+                    return EXIT_FAILURE;
+                }
+                // Verify next element
+                int next = queue.pop();
+                if (next != 2)
+                {
+                    printf("        Failed to update front after pop operation\n");
+                    printf("        Expected next dequeued value : %d\n", 2);
+                    printf("        Actual next dequeued value : %d\n", next);
+                    return EXIT_FAILURE;
+                }
+                printf("    Element regularly dequeued successfully\n");
+                return EXIT_SUCCESS;
+            }
+
+            int test_pop_from_empty_queue()
+            {
+                printf("    Testing pop from empty queue operation\n");
+                QueueByLinkedList queue;
+                printf("        Queue before pop operation :\n");
+                queue.print("           ");
+                int popped_value = queue.pop();
+                printf("        Queue after pop operation :\n");
+                queue.print("           ");
+                if (popped_value != -1)
+                {
+                    printf("        Failed to pop from empty queue\n");
+                    printf("        Expected popped value : %d\n", -1);
+                    printf("        Actual popped value : %d\n", popped_value);
+                    return EXIT_FAILURE;
+                }
+                printf("    Pop from empty queue handled correctly\n");
+                return EXIT_SUCCESS;
+            }
+
+            int test_pop()
+            {
+                printf("Testing pop operation\n");
+                int regular_pop_result = test_regular_pop();
+                if (regular_pop_result != EXIT_SUCCESS)
+                {
+                    printf("    Regular pop test failed, not testing pop from empty queue\n");
+                    return regular_pop_result;
+                }
+                int pop_from_empty_queue_result = test_pop_from_empty_queue();
+                if (pop_from_empty_queue_result != EXIT_SUCCESS)
+                {
+                    return pop_from_empty_queue_result;
+                }
+                printf("    All pop tests passed successfully\n");
+                return EXIT_SUCCESS;
+            }
+        }
+
+        int test_queue_by_linked_list()
+        {
+            int initQueue_result = test_initQueue();
+            if (initQueue_result != EXIT_SUCCESS)
+            {
+                printf("Init queue test failed, not testing push\n");
+                return initQueue_result;
+            }
+            int push_result = push::test_push();
+            if (push_result != EXIT_SUCCESS)
+            {
+                printf("Push test failed, not testing pop\n");
+                return push_result;
+            }
+            printf("    push operation tested successfully\n");
+            int pop_result = pop::test_pop();
+            if (pop_result != EXIT_SUCCESS)
+            {
+                printf("Pop test failed\n");
+                return pop_result;
+            }
+            printf("All queue by linked list tests passed successfully\n");
+            return EXIT_SUCCESS;
+        }
+    }
+    
     int test_all()
     {
 
@@ -991,11 +1200,16 @@ namespace test
         // {
         //     return EXIT_FAILURE;
         // }
-        int queue_by_circular_list_tests_results = queue_by_circular_list::test_queue_by_circular_list();
-        if (queue_by_circular_list_tests_results != EXIT_SUCCESS)
+        // int queue_by_circular_list_tests_results = queue_by_circular_list::test_queue_by_circular_list();
+        // if (queue_by_circular_list_tests_results != EXIT_SUCCESS)
+        // {
+        //     return EXIT_FAILURE;
+        // } 
+        int queue_by_linked_list_tests_results = queue_by_linked_list::test_queue_by_linked_list();
+        if (queue_by_linked_list_tests_results != EXIT_SUCCESS)
         {
             return EXIT_FAILURE;
-        }   
+        }
         return EXIT_SUCCESS;
     }
 }
